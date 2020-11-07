@@ -1,0 +1,25 @@
+{
+  "name": "joshls-cli",
+  "version": "1.0.0",
+  "description": "Lists directory entries, their respective sizes, and when they were last modified.",
+  "main": "bin/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jjjhill/joshLS.git"
+  },
+  "author": "Josh Hill",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jjjhill/joshLS/issues"
+  },
+  "homepage": "https://github.com/jjjhill/joshLS#readme",
+  "dependencies": {
+    "yargs": "^16.1.0"
+  },
+  "bin": {
+    "joshls": "./bin/index.js"
+  }
+}
