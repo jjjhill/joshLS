@@ -2,7 +2,7 @@
   "name": "joshls-cli",
   "version": "1.0.0",
   "description": "Lists directory entries, their respective sizes, and when they were last modified.",
-  "main": "bin/index.js",
+  "main": "bin/joshls.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,9 +17,14 @@
   },
   "homepage": "https://github.com/jjjhill/joshLS#readme",
   "dependencies": {
+    "chalk": "^4.1.0",
+    "express": "^4.17.1",
+    "open": "^7.3.0",
+    "path": "^0.12.7",
+    "winston": "^3.3.3",
     "yargs": "^16.1.0"
   },
   "bin": {
-    "joshls": "./bin/index.js"
+    "joshls": "./bin/joshls.js"
   }
 }
