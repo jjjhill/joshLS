@@ -3,7 +3,7 @@ const fs = require('fs');
 const winston = require('winston');
 const path = require('path');
 
-const errorLogPath = path.resolve(path.join(__dirname, '../logs/error.log'))
+const errorLogPath = path.resolve(path.join(__dirname, 'logs/error.log'))
 
 const logger = winston.createLogger({
   level: 'error',
@@ -14,21 +14,29 @@ const logger = winston.createLogger({
   ],
 });
 
-async function getDirectoryDetails(path) {
-  const dir = await fs.promises.opendir(path);
+async function getDirectoryDetails(path, erroredPaths) {
+  let dir
+  try {
+    dir = await fs.promises.opendir(path);
+  }
+  catch (err) {
+    logger.error(err)
+    erroredPaths.push(err.path)
+    return null
+  }
   const entries = []
   let totalFiles = 0
   let totalSize = 0
   // 'for await..of' because dirEntry's are in an async iterator
   for await (const dirEntry of dir) {
-    const details = await getEntryDetails(dirEntry, path)
+    const details = await getEntryDetails(dirEntry, path, erroredPaths)
     if (!details) continue;
     entries.push(details)
     totalFiles += details.numFiles
     totalSize += details.size
   }
 
-  entries.sort((a,b) => b.dateModified - a.dateModified)
+  entries.sort((a,b) => b.size - a.size)
 
   return {
     totalFiles,
@@ -37,12 +45,12 @@ async function getDirectoryDetails(path) {
   }
 }
 
-// Recursive function to   details of a directory
-// ie. total size & time of most recently modified file
-async function getEntryDetails(entry, pathPrefix) {
+// Recursive function to get details of a file/directory
+// ie. The total size and the time of most recently modified file
+async function getEntryDetails(entry, pathPrefix, erroredPaths) {
   let name = entry.name
   let path = pathPrefix + name
-  const isDirectory = entry.isDirectory()
+  const isDir = entry.isDirectory()
 
   let fileStats
   try {
@@ -50,6 +58,7 @@ async function getEntryDetails(entry, pathPrefix) {
   }
   catch(err) {
     logger.error(err)
+    erroredPaths.push(err.path)
   }
 
   if (!fileStats) return null
@@ -59,7 +68,7 @@ async function getEntryDetails(entry, pathPrefix) {
   let dateModified = fileStats.mtime
   let numFiles = 0
 
-  if (isDirectory) {
+  if (isDir) {
     path += '/'
     
     let dir
@@ -67,13 +76,13 @@ async function getEntryDetails(entry, pathPrefix) {
       dir = await fs.promises.opendir(path);
     }
     catch(err) {
-      erroredPaths.push(err.path)
       logger.error(err)
+      erroredPaths.push(err.path)
     }
     if (!dir) return null
 
     for await (const dirEntry of dir) {
-      const details = await getEntryDetails(dirEntry, path)
+      const details = await getEntryDetails(dirEntry, path, erroredPaths)
       if (!details) continue;
       if (details.dateModified > dateModified) {
         dateModified = details.dateModified
@@ -88,7 +97,7 @@ async function getEntryDetails(entry, pathPrefix) {
 
   return {
     name,
-    isDirectory,
+    isDir,
     size,
     dateModified,
     numFiles

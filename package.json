@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/jjjhill/joshLS.git"
+    "url": "git+ssh://git@github.com/jjjhill/joshls.git"
   },
   "author": "Josh Hill",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jjjhill/joshLS/issues"
+    "url": "https://github.com/jjjhill/joshls/issues"
   },
-  "homepage": "https://github.com/jjjhill/joshLS#readme",
+  "homepage": "https://github.com/jjjhill/joshls#readme",
   "dependencies": {
     "chalk": "^4.1.0",
     "express": "^4.17.1",
