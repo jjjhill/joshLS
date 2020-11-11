@@ -4,6 +4,8 @@
   "description": "Lists directory entries, their respective sizes, and when they were last modified.",
   "main": "bin/joshls.js",
   "scripts": {
+    "client": "cd app && yarn start",
+    "serve": "serve -s -n app/build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,7 +20,10 @@
   "homepage": "https://github.com/jjjhill/joshls#readme",
   "dependencies": {
     "chalk": "^4.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "npm": "^6.14.8",
     "open": "^7.3.0",
     "path": "^0.12.7",
     "winston": "^3.3.3",
@@ -26,5 +31,8 @@
   },
   "bin": {
     "joshls": "./bin/joshls.js"
+  },
+  "devDependencies": {
+    "serve": "^11.3.2"
   }
 }

@@ -1,12 +1,13 @@
 TODO:
-- make good error message for typing a file instead of a directory
-- cancel prev req when making a new one
+- disable inputs when request is being fulfilled
+- implement sorting on all table fields, clicking into directories from the UI, etc.
+- show errors on CLI too
+
 
 What's left to do for production:
 - Dockerize the app to ensure that it runs the exact same on any machine (TODO: research if this is practical)
+  - Start web server on docker init rather than when `joshls -u` is called.
 - Ensure all file types (symbolic links / sockets / etc.) work as expected
-- Add more error handling for different errors that may occur with fs.opendir() and fs.statsync()
-- If more than this basic functionality is required, then using a web library like React or Vue, one could easily implement sorting on all table fields, clicking into directories from the UI, etc.
-- Make a better file selector in the UI. HTML input with type="file" won't work here due to a security feature that prevents the web client from accessing the full path on the users system to the file that was selected. To solve this, either:
-  - Make endpoints for autocompleting what the user is typing in the web UI and pipe the output of 'ls' command back to the user
-  - Make a *nix based GUI (Py/Qt or similar) to allow for native file selection and ditch the Web UI.
+- Add better error display on front end for different errors that may occur with fs.opendir() and fs.statsync()
+- Add more robust info logging to joshls process
+- Add cancel request feature (as some can take a quite a while)

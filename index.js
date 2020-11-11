@@ -4,7 +4,6 @@ const winston = require('winston');
 const path = require('path');
 
 const errorLogPath = path.resolve(path.join(__dirname, 'logs/error.log'))
-
 const logger = winston.createLogger({
   level: 'error',
   format: winston.format.json(),
@@ -14,14 +13,14 @@ const logger = winston.createLogger({
   ],
 });
 
-async function getDirectoryDetails(path, erroredPaths) {
+async function getDirectoryDetails(path, errors, request={}) {
   let dir
   try {
     dir = await fs.promises.opendir(path);
   }
   catch (err) {
     logger.error(err)
-    erroredPaths.push(err.path)
+    errors.push(err)
     return null
   }
   const entries = []
@@ -29,7 +28,8 @@ async function getDirectoryDetails(path, erroredPaths) {
   let totalSize = 0
   // 'for await..of' because dirEntry's are in an async iterator
   for await (const dirEntry of dir) {
-    const details = await getEntryDetails(dirEntry, path, erroredPaths)
+    if (request.cancelled) break
+    const details = await getEntryDetails(dirEntry, path, errors, request)
     if (!details) continue;
     entries.push(details)
     totalFiles += details.numFiles
@@ -41,24 +41,25 @@ async function getDirectoryDetails(path, erroredPaths) {
   return {
     totalFiles,
     totalSize,
-    entries
+    entries,
+    path
   }
 }
 
 // Recursive function to get details of a file/directory
 // ie. The total size and the time of most recently modified file
-async function getEntryDetails(entry, pathPrefix, erroredPaths) {
+async function getEntryDetails(entry, pathPrefix, errors, requestStatus) {
   let name = entry.name
   let path = pathPrefix + name
   const isDir = entry.isDirectory()
 
   let fileStats
   try {
-    fileStats = fs.statSync(path)
+    fileStats = fs.lstatSync(path)
   }
   catch(err) {
     logger.error(err)
-    erroredPaths.push(err.path)
+    errors.push(err)
   }
 
   if (!fileStats) return null
@@ -77,12 +78,13 @@ async function getEntryDetails(entry, pathPrefix, erroredPaths) {
     }
     catch(err) {
       logger.error(err)
-      erroredPaths.push(err.path)
+      errors.push(err)
     }
     if (!dir) return null
 
     for await (const dirEntry of dir) {
-      const details = await getEntryDetails(dirEntry, path, erroredPaths)
+      if (requestStatus.cancelled) break
+      const details = await getEntryDetails(dirEntry, path, errors, requestStatus)
       if (!details) continue;
       if (details.dateModified > dateModified) {
         dateModified = details.dateModified
@@ -104,7 +106,20 @@ async function getEntryDetails(entry, pathPrefix, erroredPaths) {
   }
 }
 
+function toReadableFileSize(bytes) {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let currNum = bytes
+  let i = 0
+  while (currNum >= 1024) {
+    currNum /= 1024
+    i++
+  }
+  // dividing by 1 makes the JS runtime cut off trailing zeros after decimal
+  return currNum.toFixed(2) / 1 + ' ' + units[i]
+}
+
 module.exports = {
   getDirectoryDetails,
+  toReadableFileSize,
   errorLogPath
 }

@@ -65,7 +65,7 @@
     }
     else {
       const data = await response.json()
-      const errors = data.erroredPaths
+      const errors = data.errors
       if (errors) {
         showErrorToast(`There were errors analyzing ${errors.length} director${errors.length > 1 ? 'ies': 'y'}. Please see ${data.logFile} for more details. The table still shows all other directories`)
       }
@@ -98,31 +98,6 @@
       body.appendChild(row)
     })
     showTable()
-  }
-
-  function showTable() {
-    document.getElementById('content').style.display = 'block'
-  }
-
-  function hideTable() {
-    document.getElementById('content').style.display = 'none'
-  }
-
-  function showSpinner() {
-    document.getElementById('spinner').style.display = 'inline-block'
-  }
-
-  function hideSpinner() {
-    document.getElementById('spinner').style.display = 'none'
-  }
-
-  function showErrorToast(msg) {
-    $("#errToast").toast('show');
-    document.querySelector('.toast-body').innerHTML = msg
-  }
-
-  function closeToast() {
-    $("#errToast").toast('hide');
   }
 
   function toReadableFileSize(bytes) {
