@@ -13,7 +13,7 @@ const logger = winston.createLogger({
   ],
 });
 
-async function getDirectoryDetails(path, errors, request={}) {
+async function getDirectoryDetails(path, errors, requestStatus={}) {
   let dir
   try {
     dir = await fs.promises.opendir(path);
@@ -28,8 +28,8 @@ async function getDirectoryDetails(path, errors, request={}) {
   let totalSize = 0
   // 'for await..of' because dirEntry's are in an async iterator
   for await (const dirEntry of dir) {
-    if (request.cancelled) break
-    const details = await getEntryDetails(dirEntry, path, errors, request)
+    if (requestStatus.cancelled) break
+    const details = await getEntryDetails(dirEntry, path, errors, requestStatus)
     if (!details) continue;
     entries.push(details)
     totalFiles += details.numFiles

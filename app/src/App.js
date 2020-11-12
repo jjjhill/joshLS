@@ -4,10 +4,8 @@ import Toast from 'react-bootstrap/Toast';
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 import Table from 'react-bootstrap/Table';
-import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
-
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 function toReadableFileSize(bytes) {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
@@ -31,14 +29,7 @@ function App() {
   const [analyzedPath, setAnalyzedPath] = useState('')
   const [abortController, setAbortController] = useState(null)
 
-  function setData({entries=[], totalSize=null, totalFiles=null, path=''}) {
-    setEntries(entries)
-    setTotalSize(totalSize)
-    setTotalFiles(totalFiles)
-    setAnalyzedPath(path)
-  }
-
-  async function requestDirectoryDetails(path) {
+  const requestDirectoryDetails = useCallback(async (path) => {
     const controller = new AbortController();
     const signal = controller.signal
     setAbortController(controller)
@@ -71,11 +62,29 @@ function App() {
       setData(data)
     }
     setIsLoading(false)
+  }, [])
+
+  // on component mount
+  useEffect(() => {
+    (async function fetchInitialData() {
+      const response = await fetch(`http://localhost:8002/initialData`)
+      const { initialPath } = await response.json()
+      setPathInput(initialPath)
+      requestDirectoryDetails(initialPath)
+    })()
+  }, [requestDirectoryDetails])
+
+  function setData({entries=[], totalSize=null, totalFiles=null, path=''}) {
+    setEntries(entries)
+    setTotalSize(totalSize)
+    setTotalFiles(totalFiles)
+    setAnalyzedPath(path)
   }
 
   function cancelRequest() {
     abortController.abort()
     setIsLoading(false)
+    setPathInput(analyzedPath)
   }
 
   function enterDirectory(name) {
@@ -85,6 +94,12 @@ function App() {
     const nextPath = path.join(analyzedPath, name)
     setPathInput(nextPath)
     requestDirectoryDetails(nextPath)
+  }
+
+  function handleKeyUp(e) {
+    if (e.key === 'Enter') {
+      requestDirectoryDetails(pathInput)
+    }
   }
   
   return (
@@ -99,15 +114,16 @@ function App() {
         aria-describedby="basic-addon1"
         onChange={(e) => setPathInput(e.target.value)}
         value={pathInput}
+        onKeyUp={handleKeyUp}
       />
       { !isLoading ?
-        <Button variant="info" id="analyzeBtn" onClick={() => requestDirectoryDetails(pathInput)}>
+        <Button variant="info" className="actionBtn" onClick={() => requestDirectoryDetails(pathInput)}>
           Analyze
         </Button>
         : 
-        <Button variant="danger" id="cancelBtn" onClick={cancelRequest}>
-          <Spinner animation="grow" size="sm" id="spinner" />
+        <Button variant="danger" className="actionBtn" onClick={cancelRequest}>
           Cancel
+          <Spinner animation="grow" size="sm" id="spinner" />
         </Button>
       }
       
@@ -130,7 +146,7 @@ function App() {
             Current Directory: <strong><em>{analyzedPath}</em></strong>
           </span>
         </div>
-        <Table striped hover>
+        <Table striped hover size='sm'>
           <thead className="thead-dark">
             <tr>
               <th>Name</th>
@@ -141,7 +157,7 @@ function App() {
           </thead>
           <tbody id="tableBody">
             <tr>
-              <td className="clickable" colspan='4' onClick={() => enterDirectory('..')}>
+              <td className="clickable" colSpan="4" onClick={() => enterDirectory('..')}>
                 📁 ..
               </td>
             </tr>
@@ -150,7 +166,7 @@ function App() {
               return (
                 <tr key={entry.name}>
                   <td
-                    class={entry.isDir ? "clickable" : null}
+                    className={entry.isDir ? "clickable" : null}
                     onClick={() => entry.isDir ? enterDirectory(entry.name) : {}}
                   >
                     {icon} {entry.name}

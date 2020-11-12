@@ -5,21 +5,39 @@ const path = require('path')
 const homeDir = require('os').homedir()
 const { getDirectoryDetails, errorLogPath } = require('./index.js');
 
-
 function createHttpServer() {
-  console.log(process.env.NODE_ENV)
   const app = express();
   app.use(bodyParser.json());
 
   const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' ? 'http://localhost:5000' : 'http://localhost:3000'
+    origin: process.env.NODE_ENV === 'development' ? 'http://localhost:3000': 'http://localhost:5000'
   }
 
+  app.get('/initialData', cors(corsOptions), async function (req, res) {
+    const initialDataPath = path.join(__dirname, './initialData.json');
+    try {
+      const data = require(initialDataPath);
+      if (data) {
+        res.json(data)
+      }
+      else {
+        res.status(500)
+        res.send("initialData.json file did not have key: initialPath")
+      }
+    }
+    catch (err) {
+      res.status(500)
+      res.send("Server can not read initialData.json file")
+    }
+  })
+
   app.get('/', cors(corsOptions), async function (req, res) {
-    // Turn primitive into an object to make it a pass by reference
-    // rather than pass by value. Can't tell if hack or elegant way
-    // of cancelling a recursive function.
+    /* Nest boolean into an object to make it a pass by reference
+    rather than pass by value, and can then be checked at any
+    level of the recursive stack. Can't tell if ugly hack or
+    elegant way of cancelling a long-running recursive function. */
     let requestStatus = { cancelled: false };
+
     // Client cancels request
     req.on('close', () => {
       requestStatus.cancelled = true
@@ -43,7 +61,7 @@ function createHttpServer() {
     }
   })
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'development') {
     app.use(express.static(path.join(__dirname, 'app/build')));
     app.get('*', function(req, res) {
       res.sendFile(path.join(__dirname, 'app/build/index.html'));
@@ -52,7 +70,7 @@ function createHttpServer() {
 
   const port = 8002
   const server = app.listen(port, () => {
-    console.log(`listening on localhost:${port}`)
+    // console.log(`listening on localhost:${port}`)
   });
   return server
 }

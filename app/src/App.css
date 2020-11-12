@@ -15,10 +15,9 @@ body {
   font-size: 30px;
 }
 #spinner {
-  margin-right: 5px;
-  margin-left: 0;
+  margin-left: 5px;
 }
-button {
+.actionBtn {
   margin-left: 5px;
   width: 6rem;
 }
